@@ -1,7 +1,7 @@
 {
   "name": "webcustoms/enlight-symfony-wrapper",
   "description": "Allows the use of Symfony 3 controllers within Shopware plugins.",
-  "type": "project",
+  "type": "library",
   "prefer-stable": true,
   "minimum-stability": "dev",
   "license": "MIT",
