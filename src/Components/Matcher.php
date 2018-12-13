@@ -73,6 +73,7 @@ class Matcher implements MatcherInterface
 			$results[$context->getActionKey()]     = $matchInfo['_action'];
 			$results['_matchInfo']                 = $matchInfo;
 			$results['_matchInfo']['_service']     = $route->getOption('service');
+			$results['_matchInfo']['_options']     = $route->getOptions();
 			$results['_matchInfo']['controller']   = ControllerWrapper::class;
 			
 			return $results;

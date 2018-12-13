@@ -44,7 +44,7 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 		// TODO move this into TemplateResponse if possible?
 		if ($response instanceof TemplateResponse)
 		{
-			$this->View()->loadTemplate($response->getTemplateName());
+			$this->View()->loadTemplate($response->getFullTemplateName($this->request));
 			$this->View()->assign($response->getVariables());
 		}
 		else

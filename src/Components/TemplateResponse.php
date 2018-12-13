@@ -2,6 +2,8 @@
 
 namespace Webcustoms\EnlightSymfonyWrapper\Components;
 
+use Enlight_Controller_Request_Request;
+use const PATHINFO_EXTENSION;
 use Symfony\Component\HttpFoundation\Response;
 
 class TemplateResponse extends Response
@@ -37,11 +39,41 @@ class TemplateResponse extends Response
 	}
 	
 	/**
-	 * @return mixed
+	 * @return string
 	 */
 	public function getTemplateName()
 	{
 		return $this->templateName;
+	}
+	
+	/**
+	 * @param Enlight_Controller_Request_Request $request
+	 *
+	 * @return string
+	 */
+	public function getFullTemplateName(Enlight_Controller_Request_Request $request)
+	{
+		$name = rtrim($this->templateName, '/');
+		
+		$dir = trim($request->getQuery('_matchInfo')['_options']['template_dir'], '/');
+		if ($dir && strpos($name, $dir) !== 0)
+		{
+			$name = "$dir/$name";
+		}
+		
+		$suffix = $request->getQuery('_matchInfo')['_options']['template_suffix'];
+		if (!$suffix)
+		{
+			$suffix = '.tpl';
+		}
+		
+		$ext = pathinfo($name, PATHINFO_EXTENSION);
+		if (".$ext" !== $suffix)
+		{
+			$name .= $suffix;
+		}
+		
+		return $name;
 	}
 	
 	/**
