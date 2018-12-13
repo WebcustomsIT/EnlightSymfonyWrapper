@@ -16,6 +16,12 @@ class ResponseWrapper extends Enlight_Controller_Response_ResponseHttp
 	{
 		$this->response = $response;
 		$this->setBody($this->response->getContent());
+		
+		// TODO This doesn't do much: Symfony-3 has lowercase headers, and Enlight is still stuck at case-sensitive
+		foreach ($response->headers as $header => $headerValue)
+		{
+			$this->setHeader($header, $headerValue, true);
+		}
 	}
 	
 	/**

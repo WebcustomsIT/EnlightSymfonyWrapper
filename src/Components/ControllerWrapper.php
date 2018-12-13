@@ -30,6 +30,7 @@ class ControllerWrapper extends Enlight_Controller_Action
 		$renderer = $this->Front()->Plugins()->ViewRenderer();
 		
 		$response = $this->route();
+		// TODO move this into TemplateResponse if possible?
 		if ($response instanceof TemplateResponse)
 		{
 			$this->View()->loadTemplate($response->getTemplateName());
@@ -40,10 +41,6 @@ class ControllerWrapper extends Enlight_Controller_Action
 			$renderer->setNoRender();
 			
 			$responseW = new ResponseWrapper($response);
-			if ($response instanceof JsonResponse)
-			{
-				$responseW->setHeader('Content-Type', 'application/json');
-			}
 			$this->setResponse($responseW);
 			$this->front->setResponse($responseW);
 		}
