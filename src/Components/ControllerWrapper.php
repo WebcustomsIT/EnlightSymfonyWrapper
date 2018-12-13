@@ -4,14 +4,18 @@ namespace Webcustoms\EnlightSymfonyWrapper\Components;
 
 use Enlight_Controller_Action;
 use Exception;
+use Shopware\Components\CSRFGetProtectionAware;
+use Shopware\Components\CSRFWhitelistAware;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolver;
 use Symfony\Component\Routing\RequestContext;
 
-class ControllerWrapper extends Enlight_Controller_Action
+class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhitelistAware, CSRFGetProtectionAware
 {
 	protected $currentAction;
+	
+	protected $currentController;
 	
 	public function dispatch($action)
 	{
@@ -72,15 +76,83 @@ class ControllerWrapper extends Enlight_Controller_Action
 		
 		$request = $this->createSymfonyRequest();
 		$request->attributes->add($this->request->getQuery('_matchInfo') ?: []);
+		$this->initializeCurrentController($request);
+		
+		$this->currentController = [$this->currentController, $request->attributes->get('_action')];
+		$argumentResolver        = new ArgumentResolver();
+		$arguments               = $argumentResolver->getArguments($request, $this->currentController);
+		
+		return call_user_func_array($this->currentController, $arguments);
+	}
+	
+	protected function initializeCurrentController(Request $request = null)
+	{
+		if ($this->currentController)
+		{
+			return;
+		}
+		
+		if ($request === null)
+		{
+			$request = $this->createSymfonyRequest();
+			$request->attributes->add($this->request->getQuery('_matchInfo') ?: []);
+		}
 		
 		// TODO use service name instead of initializing when possible?
-		$className        = $request->attributes->get('_controller');
-		$controller       = new $className();
-		$controller       = [$controller, $request->attributes->get('_action')];
-		$argumentResolver = new ArgumentResolver();
-		$arguments        = $argumentResolver->getArguments($request, $controller);
+		$className               = $request->attributes->get('_controller');
+		$this->currentController = new $className();
+	}
+	
+	/**
+	 * Returns a list with actions which should not be validated for CSRF protection
+	 *
+	 * @return string[]
+	 */
+	public function getWhitelistedCSRFActions()
+	{
+		$this->initializeCurrentController();
+		if ($this->currentController === null)
+		{
+			return [];
+		}
+		if (!($this->currentController instanceof CSRFWhitelistAware))
+		{
+			return [];
+		}
 		
-		return call_user_func_array($controller, $arguments);
+		return array_map(
+			function ($name)
+			{
+				return str_replace('_', '', $name);
+			},
+			$this->currentController->getWhitelistedCSRFActions()
+		);
+	}
+	
+	/**
+	 * Returns a list with actions which will be checked for CSRF protection
+	 *
+	 * @return string[]
+	 */
+	public function getCSRFProtectedActions()
+	{
+		$this->initializeCurrentController();
+		if ($this->currentController === null)
+		{
+			return [];
+		}
+		if (!($this->currentController instanceof CSRFGetProtectionAware))
+		{
+			return [];
+		}
+		
+		return array_map(
+			function ($name)
+			{
+				return str_replace('_', '', $name);
+			},
+			$this->currentController->getCSRFProtectedActions()
+		);
 	}
 	
 	/**

@@ -19,6 +19,7 @@ class Matcher implements MatcherInterface
 	public function __construct(array $routes)
 	{
 		$this->routes = new RouteCollection();
+		
 		foreach ($routes as $name => $serializedRoute)
 		{
 			$route = new Route('');
@@ -63,7 +64,7 @@ class Matcher implements MatcherInterface
 			}
 			
 			$results[$context->getControllerKey()] = ControllerWrapper::class;
-			$results[$context->getActionKey()]     = 'index';
+			$results[$context->getActionKey()]     = $matchInfo['_action'];
 			$results['_matchInfo']                 = $matchInfo;
 			$results['_matchInfo']['controller']   = ControllerWrapper::class;
 			
