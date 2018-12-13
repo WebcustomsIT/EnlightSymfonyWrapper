@@ -15,9 +15,6 @@
   "require": {
     "symfony/routing": "3.4.15"
   },
-  "require-dev": {
-    "roave/security-advisories": "dev-master"
-  },
   "autoload": {
     "psr-4": {
       "Webcustoms\\EnlightSymfonyWrapper\\": "./src/"
