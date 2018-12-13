@@ -3,7 +3,7 @@
 namespace Webcustoms\EnlightSymfonyWrapper\Components;
 
 use Enlight_Controller_Action;
-use Symfony\Component\HttpFoundation\JsonResponse;
+use Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolver;
@@ -19,6 +19,13 @@ class ControllerWrapper extends Enlight_Controller_Action
 		parent::dispatch($action);
 	}
 	
+	/**
+	 * @param string $name
+	 * @param null   $value
+	 *
+	 * @return mixed|null
+	 * @throws Exception
+	 */
 	public function __call($name, $value = null)
 	{
 		if ($name !== $this->currentAction)
@@ -39,10 +46,17 @@ class ControllerWrapper extends Enlight_Controller_Action
 		else
 		{
 			$renderer->setNoRender();
-			
-			$responseW = new ResponseWrapper($response);
-			$this->setResponse($responseW);
-			$this->front->setResponse($responseW);
+		}
+		
+		// TODO prepare? other stuff?
+//		$response->prepare($request);
+		$this->Front()->Response()->setBody($response->getContent());
+		foreach ($response->headers as $header => $headerValues)
+		{
+			foreach ($headerValues as $index => $headerValue)
+			{
+				$this->Front()->Response()->setHeader($header, $headerValue, $index === 0);
+			}
 		}
 		
 		return null;
