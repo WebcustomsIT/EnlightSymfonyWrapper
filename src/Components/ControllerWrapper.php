@@ -79,6 +79,9 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 		$this->initializeCurrentController($request);
 		
 		$this->currentController = [$this->currentController, $request->attributes->get('_action')];
+		$this->container->get('router')->getContext()->setGlobalParam('_route', $request->attributes->get('_route'));
+        $this->container->get('router')->getContext()->setGlobalParam('_matchInfo', $request->attributes->all());
+
 		$argumentResolver        = new ArgumentResolver();
 		$arguments               = $argumentResolver->getArguments($request, $this->currentController);
 		
@@ -132,7 +135,7 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 			{
 				return str_replace('_', '', $name);
 			},
-			$this->currentController->getWhitelistedCSRFActions()
+			array_merge($this->currentController->getWhitelistedCSRFActions(), ["error"])
 		);
 	}
 	

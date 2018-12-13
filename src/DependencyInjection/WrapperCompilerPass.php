@@ -10,6 +10,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 use Webcustoms\EnlightSymfonyWrapper\Components\AnnotationClassLoader;
+use Webcustoms\EnlightSymfonyWrapper\Components\Generator;
 use Webcustoms\EnlightSymfonyWrapper\Components\Matcher;
 use Webcustoms\EnlightSymfonyWrapper\Subscriber\RouterOverrider;
 
@@ -32,6 +33,7 @@ class WrapperCompilerPass implements CompilerPassInterface
 	{
 		$this->compileRoutes($container);
 		$this->addDispatcher($container);
+		$this->addGenerator($container);
 		$this->addSubscribers($container);
 	}
 	
@@ -99,4 +101,16 @@ class WrapperCompilerPass implements CompilerPassInterface
 		$routerOverrider->addTag('shopware.event_subscriber');
 		$container->setDefinition('webcustoms.enlight_symfony_wrapper.subscriber.router_overrider', $routerOverrider);
 	}
+
+    protected function addGenerator(ContainerBuilder $container)
+    {
+        $generator = new Definition(
+            Generator::class, [
+                $container->getDefinition('webcustoms.enlight_symfony_wrapper.components.matcher')
+            ]
+        );
+
+        $generator->addTag('router.generator', ["priority" => 100]);
+        $container->setDefinition('webcustoms.enlight_symfony_wrapper.components.generator', $generator);
+    }
 }
