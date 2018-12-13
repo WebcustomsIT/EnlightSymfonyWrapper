@@ -11,7 +11,6 @@ use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 use Webcustoms\EnlightSymfonyWrapper\Components\AnnotationClassLoader;
 use Webcustoms\EnlightSymfonyWrapper\Components\Matcher;
-use Webcustoms\EnlightSymfonyWrapper\Subscriber\ControllerRegister;
 use Webcustoms\EnlightSymfonyWrapper\Subscriber\RouterOverrider;
 
 /**
@@ -64,6 +63,7 @@ class WrapperCompilerPass implements CompilerPassInterface
 			$routes = $annotationLoader->load($class);
 			foreach ($routes->all() as $name => $route)
 			{
+				$route->setOption('service', (string)$controllerReference);
 				$routeList[$name] = $route->serialize();
 			}
 		}

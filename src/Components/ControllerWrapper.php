@@ -98,6 +98,13 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 			$request->attributes->add($this->request->getQuery('_matchInfo') ?: []);
 		}
 		
+		$serviceId = $request->attributes->get('_service');
+		if ($serviceId)
+		{
+			$this->currentController = $this->container->get($serviceId);
+			return;
+		}
+		
 		// TODO use service name instead of initializing when possible?
 		$className               = $request->attributes->get('_controller');
 		$this->currentController = new $className();

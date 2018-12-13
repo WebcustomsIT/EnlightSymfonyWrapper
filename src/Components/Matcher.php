@@ -63,9 +63,16 @@ class Matcher implements MatcherInterface
 				$results[$context->getModuleKey()] = 'widgets';
 			}
 			
+			$route = $this->routes->get($matchInfo['_route']);
+			if (!$route)
+			{
+				return false;
+			}
+			
 			$results[$context->getControllerKey()] = ControllerWrapper::class;
 			$results[$context->getActionKey()]     = $matchInfo['_action'];
 			$results['_matchInfo']                 = $matchInfo;
+			$results['_matchInfo']['_service']     = $route->getOption('service');
 			$results['_matchInfo']['controller']   = ControllerWrapper::class;
 			
 			return $results;
