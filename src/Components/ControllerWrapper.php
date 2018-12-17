@@ -3,6 +3,9 @@
 namespace Webcustoms\EnlightSymfonyWrapper\Components;
 
 use Enlight_Controller_Action;
+use Enlight_Controller_ActionEventArgs;
+use Enlight_Controller_Request_Request;
+use Enlight_Controller_Response_Response;
 use Exception;
 use Shopware\Components\CSRFGetProtectionAware;
 use Shopware\Components\CSRFWhitelistAware;
@@ -16,6 +19,15 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 	protected $currentAction;
 	
 	protected $currentController;
+	
+	public function __construct(
+		Enlight_Controller_Request_Request $request,
+		Enlight_Controller_Response_Response $response
+	)
+	{
+		parent::__construct($request, $response);
+		$this->controller_name = $request->getQuery('_matchInfo')['_controller'];
+	}
 	
 	public function dispatch($action)
 	{
@@ -35,6 +47,11 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 		if ($name !== $this->currentAction)
 		{
 			return parent::__call($name, $value);
+		}
+		
+		if ($this->notifyDispatch('Dispatch', true))
+		{
+			return null;
 		}
 		
 		/** @var \Enlight_Controller_Plugins_ViewRenderer_Bootstrap $renderer */
@@ -84,7 +101,7 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 		$this->container->get('router')->getContext()->setGlobalParam('_matchInfo', $request->attributes->all());
 		
 		$dispatcher = $this->container->get('symfony.component.event_dispatcher.event_dispatcher');
-		$resolver = $this->container->get('webcustoms.enlight_symfony_wrapper.components.controller_resolver');
+		$resolver   = $this->container->get('webcustoms.enlight_symfony_wrapper.components.controller_resolver');
 		
 		$kernel = new HttpKernel($dispatcher, $resolver);
 		return $kernel->handle($request);
@@ -93,7 +110,8 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 	protected function initializeCurrentController(Request $request = null)
 	{
 		/** @var \Webcustoms\EnlightSymfonyWrapper\Components\ControllerResolver $resolver */
-		$resolver = $this->container->get('webcustoms.enlight_symfony_wrapper.components.controller_resolver');
+		$resolver                =
+			$this->container->get('webcustoms.enlight_symfony_wrapper.components.controller_resolver');
 		$this->currentController = $resolver->getRawController();
 	}
 	
@@ -155,5 +173,80 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 	protected function createSymfonyRequest()
 	{
 		return Request::createFromGlobals();
+	}
+	
+	/**
+	 * @throws \Enlight_Exception
+	 */
+	public function preDispatch()
+	{
+		$this->notifyDispatch('PreDispatch');
+		parent::preDispatch();
+	}
+	
+	/**
+	 * @throws \Enlight_Exception
+	 */
+	public function postDispatch()
+	{
+		if ($this->Request()->isDispatched()
+			&& !$this->Response()->isException()
+			&& $this->View()->hasTemplate())
+		{
+			$this->notifyDispatch('PostDispatchSecure');
+		}
+		
+		$this->notifyDispatch('PostDispatch');
+		parent::postDispatch();
+	}
+	
+	/**
+	 * @param      $type
+	 * @param bool $until
+	 *
+	 * @return \Enlight_Event_EventArgs|null
+	 * @throws \Enlight_Exception
+	 */
+	protected function notifyDispatch($type, $until = false)
+	{
+		$args = new Enlight_Controller_ActionEventArgs(
+			[
+				'subject'  => $this,
+				'request'  => $this->Request(),
+				'response' => $this->Response(),
+			]
+		);
+		
+		$mi = $this->request->getQuery('_matchInfo');
+		
+		if ($until)
+		{
+			$resp = Shopware()->Events()->notifyUntil(
+				$type . '_' . $mi['_route'],
+				$args
+			);
+			if ($resp)
+			{
+				return $resp;
+			}
+			
+			return Shopware()->Events()->notifyUntil(
+				$type . '_' . $mi['_controller'] . '::' . $mi['_action'],
+				$args
+			);
+		}
+		else
+		{
+			Shopware()->Events()->notify(
+				$type . '_' . $mi['_route'],
+				$args
+			);
+			Shopware()->Events()->notify(
+				$type . '_' . $mi['_controller'] . '::' . $mi['_action'],
+				$args
+			);
+			
+			return null;
+		}
 	}
 }
