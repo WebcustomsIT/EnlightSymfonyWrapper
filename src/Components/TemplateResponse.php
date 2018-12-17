@@ -3,8 +3,8 @@
 namespace Webcustoms\EnlightSymfonyWrapper\Components;
 
 use Enlight_Controller_Request_Request;
-use const PATHINFO_EXTENSION;
 use Symfony\Component\HttpFoundation\Response;
+use const PATHINFO_EXTENSION;
 
 class TemplateResponse extends Response
 {

@@ -83,12 +83,12 @@ class Matcher implements MatcherInterface
 			return false;
 		}
 	}
-
-    /**
-     * @return RouteCollection
-     */
-    public function getRoutes()
-    {
-        return $this->routes;
-    }
+	
+	/**
+	 * @return RouteCollection
+	 */
+	public function getRoutes()
+	{
+		return $this->routes;
+	}
 }
