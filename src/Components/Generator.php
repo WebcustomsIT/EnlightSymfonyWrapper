@@ -35,8 +35,7 @@ class Generator implements GeneratorInterface
 			$this->matcher->getRoutes(),
 			$symfonyContext
 		);
-		
-		// Find by 'route' directly
+
 		if ($params['route'])
 		{
 			$route = $this->matcher->getRoutes()->get($params['route']);
@@ -46,7 +45,7 @@ class Generator implements GeneratorInterface
 			}
 		}
 		
-		switch ($params['module'])
+		switch ($params[$context->getModuleKey()])
 		{
 			case 'backend':
 			case 'frontend':
@@ -54,14 +53,14 @@ class Generator implements GeneratorInterface
 			case 'api':
 				return null;
 			default:
-				$controller = $params['module'] . '\\' . $params['controller'];
+				$controller = $params[$context->getModuleKey()] . '\\' . $params[$context->getControllerKey()];
 		}
 		
 		// Lookup using action and controller name
 		foreach ($this->matcher->getRoutes()->getIterator() as $name => $route)
 		{
 			if ($route->getDefault('_controller') === $controller &&
-				$route->getDefault('_action') === $params['action'])
+				$route->getDefault('_action') === $params[$context->getActionKey()])
 			{
 				return $generator->generate($name, $this->getParams($params));
 			}
@@ -73,7 +72,7 @@ class Generator implements GeneratorInterface
 	protected function getParams(array $params)
 	{
 		$p = $params;
-		unset($p['controller'], $p['module'], $p['action'], $p['_matchInfo'], $p['_route']);
+		unset($p['controller'], $p['module'], $p['action']);
 		return $p;
 	}
 }

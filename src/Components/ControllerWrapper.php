@@ -97,9 +97,7 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 		$request->attributes->add($this->request->getQuery('_matchInfo') ?: []);
 		$request->attributes->add($this->request->getUserParams());
 		$this->initializeCurrentController($request);
-		
-		$this->container->get('router')->getContext()->setGlobalParam('_route', $request->attributes->get('_route'));
-		$this->container->get('router')->getContext()->setGlobalParam('_matchInfo', $request->attributes->all());
+		$this->setRouterContext($request);
 		
 		$dispatcher = $this->container->get('symfony.component.event_dispatcher.event_dispatcher');
 		$resolver   = $this->container->get('webcustoms.enlight_symfony_wrapper.components.controller_resolver');
@@ -114,6 +112,16 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 		$resolver                =
 			$this->container->get('webcustoms.enlight_symfony_wrapper.components.controller_resolver');
 		$this->currentController = $resolver->getRawController();
+	}
+	
+	protected function setRouterContext(Request $request)
+	{
+		$controllerName = $request->attributes->get('_controller');
+		$moduleName = substr($controllerName, 0, strrpos($controllerName, '\\'));
+		$controllerName = substr($controllerName, strrpos($controllerName, '\\') + 1);
+		
+		$this->container->get('router')->getContext()->setGlobalParam('controller', $controllerName);
+		$this->container->get('router')->getContext()->setGlobalParam('module', $moduleName);
 	}
 	
 	/**

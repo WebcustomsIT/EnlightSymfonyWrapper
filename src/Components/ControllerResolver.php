@@ -49,7 +49,6 @@ class ControllerResolver implements ControllerResolverInterface
 			return $this->currentController;
 		}
 		
-		// TODO use service name instead of initializing when possible?
 		$className               = $request->attributes->get('_controller');
 		$this->currentController = new $className();
 		

@@ -23,11 +23,6 @@
             <tag name="router.matcher" priority="100"/>
         </service>
 
-        <service id="webcustoms.enlight_symfony_wrapper.components.pre_filter"
-                 class="Webcustoms\EnlightSymfonyWrapper\Components\PreFilter">
-            <tag name="router.pre_filter" priority="100"/>
-        </service>
-
         <service id="webcustoms.enlight_symfony_wrapper.components.generator"
                  class="Webcustoms\EnlightSymfonyWrapper\Components\Generator">
             <argument type="service" id="webcustoms.enlight_symfony_wrapper.components.matcher"/>
