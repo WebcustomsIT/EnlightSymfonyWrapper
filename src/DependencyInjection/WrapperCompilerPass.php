@@ -88,13 +88,6 @@ class WrapperCompilerPass implements CompilerPassInterface
 	
 	protected function addSubscribers(ContainerBuilder $container)
 	{
-//		$controllerRegister = new Definition(ControllerRegister::class);
-//		$controllerRegister->addTag('shopware.event_subscriber');
-//		$container->setDefinition(
-//			'webcustoms.enlight_symfony_wrapper.subscriber.controller_register',
-//			$controllerRegister
-//		);
-		
 		$routerOverrider = new Definition(
 			RouterOverrider::class, [
 									  $container->getDefinition(
