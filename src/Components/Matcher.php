@@ -62,6 +62,10 @@ class Matcher implements MatcherInterface
 			{
 				$results[$context->getModuleKey()] = 'widgets';
 			}
+			else
+			{
+				$results[$context->getModuleKey()] = 'frontend';
+			}
 			
 			$route = $this->routes->get($matchInfo['_route']);
 			if (!$route)

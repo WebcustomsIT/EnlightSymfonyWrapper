@@ -44,5 +44,10 @@
                  class="Webcustoms\EnlightSymfonyWrapper\Subscriber\RouterOverrider">
             <argument type="service" id="webcustoms.enlight_symfony_wrapper.dependency_injection.dispatcher"/>
         </service>
+
+        <service id="webcustoms.enlight_symfony_wrapper.dependency_injection.cache_route_generation_service"
+                 class="Webcustoms\EnlightSymfonyWrapper\DependencyInjection\CacheRouteGenerationService"
+                 decorates="shopware.http_cache.cache_route_generation_service">
+        </service>
     </services>
 </container>

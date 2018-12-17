@@ -71,6 +71,7 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 		
 		// TODO prepare? other stuff?
 //		$response->prepare($request);
+		$this->Front()->Response()->setHttpResponseCode($response->getStatusCode());
 		$this->Front()->Response()->setBody($response->getContent());
 		foreach ($response->headers as $header => $headerValues)
 		{
