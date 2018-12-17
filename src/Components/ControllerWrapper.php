@@ -76,6 +76,7 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 		
 		$request = $this->createSymfonyRequest();
 		$request->attributes->add($this->request->getQuery('_matchInfo') ?: []);
+		$request->attributes->add($this->request->getUserParams());
 		$this->initializeCurrentController($request);
 		
 		$this->currentController = [$this->currentController, $request->attributes->get('_action')];
