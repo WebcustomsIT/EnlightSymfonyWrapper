@@ -5,15 +5,12 @@ namespace Webcustoms\EnlightSymfonyWrapper\DependencyInjection;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\AnnotationRegistry;
 use Shopware\Components\DependencyInjection\Compiler\TagReplaceTrait;
+use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Definition;
-use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
+use Symfony\Component\EventDispatcher\DependencyInjection\RegisterListenersPass;
 use Webcustoms\EnlightSymfonyWrapper\Components\AnnotationClassLoader;
-use Webcustoms\EnlightSymfonyWrapper\Components\Generator;
-use Webcustoms\EnlightSymfonyWrapper\Components\Matcher;
-use Webcustoms\EnlightSymfonyWrapper\Components\PreFilter;
-use Webcustoms\EnlightSymfonyWrapper\Subscriber\RouterOverrider;
 
 /**
  * This CompilerPass should be used in the build process of the services, to ensure
@@ -25,18 +22,27 @@ class WrapperCompilerPass implements CompilerPassInterface
 {
 	use TagReplaceTrait;
 	
+	public function __construct(ContainerBuilder $container)
+	{
+		$container->addCompilerPass(new RegisterListenersPass());
+	}
+	
 	/**
 	 * @param ContainerBuilder $container
 	 *
 	 * @throws \Doctrine\Common\Annotations\AnnotationException
+	 * @throws \Exception
 	 */
 	public function process(ContainerBuilder $container)
 	{
+		$loader = new XmlFileLoader(
+			$container,
+			new FileLocator()
+		);
+		
+		$loader->load(__DIR__ . '/services.xml');
+		
 		$this->compileRoutes($container);
-		$this->addDispatcher($container);
-		$this->addPreFilter($container);
-		$this->addGenerator($container);
-		$this->addSubscribers($container);
 	}
 	
 	/**
@@ -49,7 +55,8 @@ class WrapperCompilerPass implements CompilerPassInterface
 		AnnotationRegistry::registerLoader('class_exists');
 		$annotationLoader = new AnnotationClassLoader(new AnnotationReader());
 		
-		$routeList = [];
+		$matcher = $container->getDefinition('webcustoms.enlight_symfony_wrapper.components.matcher');
+		$routeList = $matcher->getArgument(0);
 		
 		$controllers = $this->findAndSortTaggedServices(
 			'webcustoms.enlight_symfony_wrapper.controller',
@@ -57,7 +64,7 @@ class WrapperCompilerPass implements CompilerPassInterface
 		);
 		foreach ($controllers as $controllerReference)
 		{
-			$def = $container->getDefinition((string)$controllerReference);
+			$def   = $container->getDefinition((string)$controllerReference);
 			$class = $def->getClass();
 			if ($class === null)
 			{
@@ -71,50 +78,6 @@ class WrapperCompilerPass implements CompilerPassInterface
 				$routeList[$name] = $route->serialize();
 			}
 		}
-		
-		$matcher = new Definition(Matcher::class);
-		$matcher->addTag('router.matcher', ['priority' => 100]);
-		$matcher->addArgument($routeList);
-		$container->setDefinition('webcustoms.enlight_symfony_wrapper.components.matcher', $matcher);
-	}
-	
-	protected function addDispatcher(ContainerBuilder $container)
-	{
-		$service = 'webcustoms.enlight_symfony_wrapper.components.dispatcher';
-		$container->register($service, Dispatcher::class)
-				  ->setDecoratedService('dispatcher', "$service.inner")
-				  ->addArgument(new Reference("$service.inner"));
-	}
-	
-	protected function addSubscribers(ContainerBuilder $container)
-	{
-		$routerOverrider = new Definition(
-			RouterOverrider::class, [
-									  $container->getDefinition(
-										  'webcustoms.enlight_symfony_wrapper.components.dispatcher'
-									  )
-								  ]
-		);
-		$routerOverrider->addTag('shopware.event_subscriber');
-		$container->setDefinition('webcustoms.enlight_symfony_wrapper.subscriber.router_overrider', $routerOverrider);
-	}
-	
-	protected function addPreFilter(ContainerBuilder $container)
-	{
-		$preFilter = new Definition(PreFilter::class);
-		$preFilter->addTag('router.pre_filter', ['priority' => 100]);
-		$container->setDefinition('webcustoms.enlight_symfony_wrapper.components.pre_filter', $preFilter);
-	}
-	
-	protected function addGenerator(ContainerBuilder $container)
-	{
-		$generator = new Definition(
-			Generator::class, [
-								$container->getDefinition('webcustoms.enlight_symfony_wrapper.components.matcher')
-							]
-		);
-		
-		$generator->addTag('router.generator', ['priority' => 100]);
-		$container->setDefinition('webcustoms.enlight_symfony_wrapper.components.generator', $generator);
+		$matcher->replaceArgument(0, $routeList);
 	}
 }

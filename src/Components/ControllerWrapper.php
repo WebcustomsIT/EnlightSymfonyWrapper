@@ -8,7 +8,7 @@ use Shopware\Components\CSRFGetProtectionAware;
 use Shopware\Components\CSRFWhitelistAware;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Controller\ArgumentResolver;
+use Symfony\Component\HttpKernel\HttpKernel;
 use Symfony\Component\Routing\RequestContext;
 
 class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhitelistAware, CSRFGetProtectionAware
@@ -68,6 +68,7 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 	
 	/**
 	 * @return Response
+	 * @throws Exception
 	 */
 	protected function route()
 	{
@@ -79,39 +80,21 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 		$request->attributes->add($this->request->getUserParams());
 		$this->initializeCurrentController($request);
 		
-		$this->currentController = [$this->currentController, $request->attributes->get('_action')];
 		$this->container->get('router')->getContext()->setGlobalParam('_route', $request->attributes->get('_route'));
 		$this->container->get('router')->getContext()->setGlobalParam('_matchInfo', $request->attributes->all());
 		
-		$argumentResolver = new ArgumentResolver();
-		$arguments        = $argumentResolver->getArguments($request, $this->currentController);
+		$dispatcher = $this->container->get('symfony.component.event_dispatcher.event_dispatcher');
+		$resolver = $this->container->get('webcustoms.enlight_symfony_wrapper.components.controller_resolver');
 		
-		return call_user_func_array($this->currentController, $arguments);
+		$kernel = new HttpKernel($dispatcher, $resolver);
+		return $kernel->handle($request);
 	}
 	
 	protected function initializeCurrentController(Request $request = null)
 	{
-		if ($this->currentController)
-		{
-			return;
-		}
-		
-		if ($request === null)
-		{
-			$request = $this->createSymfonyRequest();
-			$request->attributes->add($this->request->getQuery('_matchInfo') ?: []);
-		}
-		
-		$serviceId = $request->attributes->get('_service');
-		if ($serviceId)
-		{
-			$this->currentController = $this->container->get($serviceId);
-			return;
-		}
-		
-		// TODO use service name instead of initializing when possible?
-		$className               = $request->attributes->get('_controller');
-		$this->currentController = new $className();
+		/** @var \Webcustoms\EnlightSymfonyWrapper\Components\ControllerResolver $resolver */
+		$resolver = $this->container->get('webcustoms.enlight_symfony_wrapper.components.controller_resolver');
+		$this->currentController = $resolver->getRawController();
 	}
 	
 	/**
@@ -136,7 +119,7 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 			{
 				return str_replace('_', '', $name);
 			},
-			array_merge($this->currentController->getWhitelistedCSRFActions(), ["error"])
+			array_merge($this->currentController->getWhitelistedCSRFActions(), ['error'])
 		);
 	}
 	

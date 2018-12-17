@@ -1,0 +1,48 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <service id="symfony.component.event_dispatcher.event_dispatcher"
+                 class="Symfony\Component\EventDispatcher\EventDispatcher">
+        </service>
+
+        <service id="event_dispatcher"
+                 alias="symfony.component.event_dispatcher.event_dispatcher"/>
+
+        <service id="webcustoms.enlight_symfony_wrapper.components.controller_resolver"
+                 class="Webcustoms\EnlightSymfonyWrapper\Components\ControllerResolver">
+            <argument type="service" id="service_container"/>
+        </service>
+
+        <service id="webcustoms.enlight_symfony_wrapper.components.matcher"
+                 class="Webcustoms\EnlightSymfonyWrapper\Components\Matcher">
+            <argument type="collection"/>
+            <tag name="router.matcher" priority="100"/>
+        </service>
+
+        <service id="webcustoms.enlight_symfony_wrapper.components.pre_filter"
+                 class="Webcustoms\EnlightSymfonyWrapper\Components\PreFilter">
+            <tag name="router.pre_filter" priority="100"/>
+        </service>
+
+        <service id="webcustoms.enlight_symfony_wrapper.components.generator"
+                 class="Webcustoms\EnlightSymfonyWrapper\Components\Generator">
+            <argument type="service" id="webcustoms.enlight_symfony_wrapper.components.matcher"/>
+            <tag name="router.generator" priority="100"/>
+        </service>
+
+        <service id="webcustoms.enlight_symfony_wrapper.dependency_injection.dispatcher"
+                 class="Webcustoms\EnlightSymfonyWrapper\DependencyInjection\Dispatcher"
+                 decorates="dispatcher">
+            <argument type="service" id="webcustoms.enlight_symfony_wrapper.dependency_injection.dispatcher.inner"/>
+        </service>
+
+        <service id="webcustoms.enlight_symfony_wrapper.subscriber.router_overrider"
+                 class="Webcustoms\EnlightSymfonyWrapper\Subscriber\RouterOverrider">
+            <argument type="service" id="webcustoms.enlight_symfony_wrapper.dependency_injection.dispatcher"/>
+        </service>
+    </services>
+</container>

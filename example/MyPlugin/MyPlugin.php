@@ -13,6 +13,6 @@ class MyPlugin extends Plugin
 	{
 		parent::build($container);
 		
-		$container->addCompilerPass(new WrapperCompilerPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, 1000);
+		$container->addCompilerPass(new WrapperCompilerPass($container), PassConfig::TYPE_BEFORE_OPTIMIZATION, 1000);
 	}
 }
