@@ -56,4 +56,4 @@ The following Shopware-like events are notified, in this order:
 - `Enlight_Controller_Action_PostDispatchSecure`
 - `Enlight_Controller_Action_PostDispatch_MyNameSpace\MyController`
 - `Enlight_Controller_Action_PostDispatchS_Backend` (or `_Api`, `_Frontend`, `_Widgets` depending on the URL)
-- `Enlight_Controller_Action_PreDispatch`
+- `Enlight_Controller_Action_PostDispatch`
