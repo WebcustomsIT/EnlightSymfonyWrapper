@@ -35,13 +35,13 @@ class Generator implements GeneratorInterface
 			$this->matcher->getRoutes(),
 			$symfonyContext
 		);
-
+		
 		if ($params['route'])
 		{
 			$route = $this->matcher->getRoutes()->get($params['route']);
 			if ($route)
 			{
-				return $generator->generate($params['route'], $this->getParams($params));
+				return $generator->generate($params['route'], $this->getParams($params, $context));
 			}
 		}
 		
@@ -62,17 +62,21 @@ class Generator implements GeneratorInterface
 			if ($route->getDefault('_controller') === $controller &&
 				$route->getDefault('_action') === $params[$context->getActionKey()])
 			{
-				return $generator->generate($name, $this->getParams($params));
+				return $generator->generate($name, $this->getParams($params, $context));
 			}
 		}
 		
 		return null;
 	}
 	
-	protected function getParams(array $params)
+	protected function getParams(array $params, Context $context)
 	{
 		$p = $params;
-		unset($p['controller'], $p['module'], $p['action']);
+		unset(
+			$p[$context->getModuleKey()],
+			$p[$context->getControllerKey()],
+			$p[$context->getActionKey()]
+		);
 		return $p;
 	}
 }

@@ -123,12 +123,20 @@ class Dispatcher extends Enlight_Controller_Dispatcher_Default
 	
 	public function isDispatchable(Enlight_Controller_Request_Request $request)
 	{
+		// We will get the request again if the ErrorSubscriber sets the error_handler
+		
+		$handler = $request->getParam('error_handler');
+		if ($handler)
+		{
+			return false; // let Shopware handle it in the default manner
+		}
+		
 		if ($request->getQuery('_matchInfo')['controller'] === ControllerWrapper::class)
 		{
 			return ControllerWrapper::class;
 		}
 		
-		return false;
+		return false; // let Shopware handle it in the default manner
 	}
 	
 	public function isValidModule($module)
