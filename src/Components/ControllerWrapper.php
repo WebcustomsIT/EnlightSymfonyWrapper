@@ -56,18 +56,9 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 		
 		/** @var \Enlight_Controller_Plugins_ViewRenderer_Bootstrap $renderer */
 		$renderer = $this->Front()->Plugins()->ViewRenderer();
+		$renderer->setNoRender();
 		
 		$response = $this->route();
-		// TODO move this into TemplateResponse if possible?
-		if ($response instanceof TemplateResponse)
-		{
-			$this->View()->loadTemplate($response->getFullTemplateName($this->request));
-			$this->View()->assign($response->getVariables());
-		}
-		else
-		{
-			$renderer->setNoRender();
-		}
 		
 		// TODO prepare? other stuff?
 //		$response->prepare($request);
@@ -103,7 +94,11 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 		$resolver   = $this->container->get('webcustoms.enlight_symfony_wrapper.components.controller_resolver');
 		
 		$kernel = new HttpKernel($dispatcher, $resolver);
-		return $kernel->handle($request);
+		$response = $kernel->handle($request);
+		
+		$response->prepare($request);
+		
+		return $response;
 	}
 	
 	protected function initializeCurrentController(Request $request = null)
