@@ -18,8 +18,8 @@ class Generator implements GeneratorInterface
 	}
 	
 	/**
-	 * @param array|string $params
-	 * @param Context      $context
+	 * @param array   $params
+	 * @param Context $context
 	 *
 	 * @return array|string
 	 */
@@ -51,7 +51,7 @@ class Generator implements GeneratorInterface
 			case 'frontend':
 			case 'widgets':
 			case 'api':
-				return null;
+				return [];
 			default:
 				$controller = $params[$context->getModuleKey()] . '\\' . $params[$context->getControllerKey()];
 		}
@@ -71,7 +71,7 @@ class Generator implements GeneratorInterface
 			}
 		}
 		
-		return null;
+		return [];
 	}
 	
 	protected function getParams(array $params, Context $context)

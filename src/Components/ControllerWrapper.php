@@ -17,9 +17,9 @@ use Symfony\Component\Routing\RequestContext;
 class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhitelistAware, CSRFGetProtectionAware
 {
 	protected $currentAction;
-	
+
 	protected $currentController;
-	
+
 	public function __construct(
 		Enlight_Controller_Request_Request $request,
 		Enlight_Controller_Response_Response $response
@@ -28,16 +28,16 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 		parent::__construct($request, $response);
 		$this->controller_name = $request->getQuery('_matchInfo')['_controller'];
 	}
-	
+
 	public function dispatch($action)
 	{
 		$this->currentAction = $action;
 		parent::dispatch($action);
 	}
-	
+
 	/**
-	 * @param string $name
-	 * @param null   $value
+	 * @param string     $name
+	 * @param array|null $value
 	 *
 	 * @return mixed|null
 	 * @throws Exception
@@ -48,18 +48,18 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 		{
 			return parent::__call($name, $value);
 		}
-		
+
 		if ($this->notifyDispatch('Dispatch', true))
 		{
 			return null;
 		}
-		
+
 		/** @var \Enlight_Controller_Plugins_ViewRenderer_Bootstrap $renderer */
 		$renderer = $this->Front()->Plugins()->ViewRenderer();
 		$renderer->setNoRender();
-		
+
 		$response = $this->route();
-		
+
 		// TODO prepare? other stuff?
 //		$response->prepare($request);
 		$this->Front()->Response()->setHttpResponseCode($response->getStatusCode());
@@ -71,10 +71,10 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 				$this->Front()->Response()->setHeader($header, $headerValue, $index === 0);
 			}
 		}
-		
+
 		return null;
 	}
-	
+
 	/**
 	 * @return Response
 	 * @throws Exception
@@ -83,24 +83,24 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 	{
 		$context = new RequestContext();
 		$context->fromRequest(Request::createFromGlobals());
-		
+
 		$request = $this->createSymfonyRequest();
 		$request->attributes->add($this->request->getQuery('_matchInfo') ?: []);
 		$request->attributes->add($this->request->getUserParams());
 		$this->initializeCurrentController($request);
 		$this->setRouterContext($request);
-		
+
 		$dispatcher = $this->container->get('symfony.component.event_dispatcher.event_dispatcher');
 		$resolver   = $this->container->get('webcustoms.enlight_symfony_wrapper.components.controller_resolver');
-		
+
 		$kernel = new HttpKernel($dispatcher, $resolver);
 		$response = $kernel->handle($request);
-		
+
 		$response->prepare($request);
-		
+
 		return $response;
 	}
-	
+
 	protected function initializeCurrentController(Request $request = null)
 	{
 		/** @var \Webcustoms\EnlightSymfonyWrapper\Components\ControllerResolver $resolver */
@@ -108,17 +108,17 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 			$this->container->get('webcustoms.enlight_symfony_wrapper.components.controller_resolver');
 		$this->currentController = $resolver->getRawController();
 	}
-	
+
 	protected function setRouterContext(Request $request)
 	{
 		$controllerName = $request->attributes->get('_controller');
 		$moduleName     = substr($controllerName, 0, strrpos($controllerName, '\\'));
 		$controllerName = substr($controllerName, strrpos($controllerName, '\\') + 1);
-		
+
 		$this->container->get('router')->getContext()->setGlobalParam('controller', $controllerName);
 		$this->container->get('router')->getContext()->setGlobalParam('module', $moduleName);
 	}
-	
+
 	/**
 	 * Returns a list with actions which should not be validated for CSRF protection
 	 *
@@ -135,7 +135,7 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 		{
 			return [];
 		}
-		
+
 		return array_map(
 			function ($name)
 			{
@@ -144,7 +144,7 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 			$this->currentController->getWhitelistedCSRFActions()
 		);
 	}
-	
+
 	/**
 	 * Returns a list with actions which will be checked for CSRF protection
 	 *
@@ -161,7 +161,7 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 		{
 			return [];
 		}
-		
+
 		return array_map(
 			function ($name)
 			{
@@ -170,7 +170,7 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 			$this->currentController->getCSRFProtectedActions()
 		);
 	}
-	
+
 	/**
 	 * @return Request
 	 */
@@ -178,7 +178,7 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 	{
 		return Request::createFromGlobals();
 	}
-	
+
 	/**
 	 * @throws \Enlight_Exception
 	 */
@@ -187,7 +187,7 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 		$this->notifyDispatch('PreDispatch');
 		parent::preDispatch();
 	}
-	
+
 	/**
 	 * @throws \Enlight_Exception
 	 */
@@ -199,11 +199,11 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 		{
 			$this->notifyDispatch('PostDispatchSecure');
 		}
-		
+
 		$this->notifyDispatch('PostDispatch');
 		parent::postDispatch();
 	}
-	
+
 	/**
 	 * @param      $type
 	 * @param bool $until
@@ -220,9 +220,9 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 				'response' => $this->Response(),
 			]
 		);
-		
+
 		$mi = $this->request->getQuery('_matchInfo');
-		
+
 		if ($until)
 		{
 			$resp = Shopware()->Events()->notifyUntil(
@@ -233,7 +233,7 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 			{
 				return $resp;
 			}
-			
+
 			return Shopware()->Events()->notifyUntil(
 				$type . '_' . $mi['_controller'] . '::' . $mi['_action'],
 				$args
@@ -249,7 +249,7 @@ class ControllerWrapper extends Enlight_Controller_Action implements CSRFWhiteli
 				$type . '_' . $mi['_controller'] . '::' . $mi['_action'],
 				$args
 			);
-			
+
 			return null;
 		}
 	}
