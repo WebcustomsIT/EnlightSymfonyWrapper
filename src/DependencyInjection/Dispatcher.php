@@ -23,7 +23,6 @@ class Dispatcher extends Enlight_Controller_Dispatcher_Default
 	public function __construct(Enlight_Controller_Dispatcher_Default $inner)
 	{
 		$this->inner = $inner;
-		parent::__construct();
 	}
 	
 	public function addControllerDirectory($path, $module = null)

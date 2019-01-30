@@ -55,7 +55,12 @@ class Generator implements GeneratorInterface
 			default:
 				$controller = $params[$context->getModuleKey()] . '\\' . $params[$context->getControllerKey()];
 		}
-		
+
+		if (!isset($params[$context->getActionKey()]))
+        {
+            $params[$context->getActionKey()] = 'index';
+        }
+
 		// Lookup using action and controller name
 		foreach ($this->matcher->getRoutes()->getIterator() as $name => $route)
 		{
