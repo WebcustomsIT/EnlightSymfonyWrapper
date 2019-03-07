@@ -15,6 +15,7 @@
         <service id="webcustoms.enlight_symfony_wrapper.components.controller_resolver"
                  class="Webcustoms\EnlightSymfonyWrapper\Components\ControllerResolver">
             <argument type="service" id="service_container"/>
+            <argument type="tagged" tag="controller.argument_value_resolver"/>
         </service>
 
         <service id="webcustoms.enlight_symfony_wrapper.components.matcher"
